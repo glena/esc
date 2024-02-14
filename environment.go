@@ -19,6 +19,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/pulumi/esc/internal/util"
 	"github.com/pulumi/esc/schema"
 )
 
@@ -29,55 +30,23 @@ type ExecContext struct {
 	values         map[string]Value
 }
 
-type copier struct {
-	memo map[*Value]*Value
-}
-
-func newCopier() copier {
-	return copier{memo: map[*Value]*Value{}}
-}
-
-func (c copier) copy(v *Value) *Value {
-	if v == nil {
-		return nil
-	}
-
-	if copy, ok := c.memo[v]; ok {
-		return copy
-	}
-
-	copy := &Value{}
-	c.memo[v] = copy
-
-	var nv any
-	switch vr := v.Value.(type) {
-	case []*Value:
-		a := make([]*Value, len(vr))
-		for i, v := range vr {
-			a[i] = c.copy(v)
-		}
-		nv = a
-	case map[string]*Value:
-		m := make(map[string]*Value, len(vr))
-		for k, v := range vr {
-			m[k] = c.copy(v)
-		}
-		nv = m
-	default:
-		nv = vr
-	}
-
-	*copy = Value{
-		Value: nv,
-	}
-	return copy
+func newValueCopier() util.Copier[Value] {
+	return util.NewCopier(
+		func(v *Value) any {
+			return v.Value
+		},
+		func(o *Value, v any) {
+			o.Value = v
+		},
+	)
 }
 
 func copyContext(context map[string]Value) map[string]Value {
 	newContext := make(map[string]Value)
+
 	for key, v := range context {
 		value := v
-		copy := newCopier().copy(&value)
+		copy := newValueCopier().Copy(&value)
 		newContext[key] = *copy
 	}
 	return newContext

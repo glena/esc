@@ -23,6 +23,7 @@ import (
 
 	"github.com/pulumi/esc"
 	"github.com/pulumi/esc/ast"
+	"github.com/pulumi/esc/internal/util"
 	"github.com/pulumi/esc/schema"
 	"golang.org/x/exp/maps"
 )
@@ -373,51 +374,22 @@ func mergedSchema(base, top *schema.Schema) *schema.Schema {
 	return schema.Record(record).AdditionalProperties(additional).Schema()
 }
 
-type copier struct {
-	memo map[*value]*value
-}
+func newValueCopier() util.Copier[value] {
+	return util.NewCopier(
+		func(v *value) any {
+			return v.repr
+		},
+		func(o *value, v any) {
+			o.repr = v
 
-func newCopier() copier {
-	return copier{memo: map[*value]*value{}}
-}
-
-func (c copier) copy(v *value) *value {
-	if v == nil {
-		return nil
-	}
-
-	if copy, ok := c.memo[v]; ok {
-		return copy
-	}
-
-	copy := &value{}
-	c.memo[v] = copy
-
-	var repr any
-	switch vr := v.repr.(type) {
-	case []*value:
-		a := make([]*value, len(vr))
-		for i, v := range vr {
-			a[i] = c.copy(v)
-		}
-		repr = a
-	case map[string]*value:
-		m := make(map[string]*value, len(vr))
-		for k, v := range vr {
-			m[k] = c.copy(v)
-		}
-		repr = m
-	default:
-		repr = vr
-	}
-
-	*copy = value{
-		def:     v.def,
-		base:    c.copy(v.base),
-		schema:  v.schema,
-		unknown: v.unknown,
-		secret:  v.secret,
-		repr:    repr,
-	}
-	return copy
+			// *copy = value{
+			// 	def:     v.def,
+			// 	base:    c.copy(v.base),
+			// 	schema:  v.schema,
+			// 	unknown: v.unknown,
+			// 	secret:  v.secret,
+			// 	repr:    repr,
+			// }
+		},
+	)
 }
