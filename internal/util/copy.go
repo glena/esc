@@ -14,7 +14,7 @@
 
 package util
 
-func NewCopier[T any](getter func(v *T) any, setter func(o *T, v any)) Copier[T] {
+func NewCopier[T any](getter func(v *T) any, setter func(o *T, v *T, nv any)) Copier[T] {
 	return Copier[T]{
 		memo:   map[*T]*T{},
 		getter: getter,
@@ -24,7 +24,7 @@ func NewCopier[T any](getter func(v *T) any, setter func(o *T, v any)) Copier[T]
 
 type Copier[T any] struct {
 	memo   map[*T]*T
-	setter func(o *T, v any)
+	setter func(o *T, v *T, nv any)
 	getter func(v *T) any
 }
 
@@ -58,7 +58,7 @@ func (c Copier[T]) Copy(v *T) *T {
 		nv = vr
 	}
 
-	c.setter(copy, nv)
+	c.setter(copy, v, nv)
 	return copy
 }
 

@@ -375,21 +375,22 @@ func mergedSchema(base, top *schema.Schema) *schema.Schema {
 }
 
 func newValueCopier() util.Copier[value] {
-	return util.NewCopier(
+	var c util.Copier[value]
+	c = util.NewCopier(
 		func(v *value) any {
 			return v.repr
 		},
-		func(o *value, v any) {
-			o.repr = v
-
-			// *copy = value{
-			// 	def:     v.def,
-			// 	base:    c.copy(v.base),
-			// 	schema:  v.schema,
-			// 	unknown: v.unknown,
-			// 	secret:  v.secret,
-			// 	repr:    repr,
-			// }
+		func(o *value, v *value, nv any) {
+			*o = value{
+				def:     v.def,
+				base:    c.Copy(v.base),
+				schema:  v.schema,
+				unknown: v.unknown,
+				secret:  v.secret,
+				repr:    nv,
+			}
 		},
 	)
+
+	return c
 }

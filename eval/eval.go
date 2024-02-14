@@ -451,7 +451,7 @@ func (e *evalContext) evaluateImport(myImports map[string]*value, decl *ast.Impo
 
 	myImports[name] = val
 	if merge {
-		val = newCopier().copy(val)
+		val = newValueCopier().Copy(val)
 		val.merge(e.base)
 		e.base = val
 	}
@@ -605,7 +605,7 @@ func (e *evalContext) evaluateInterpolate(x *expr, repr *interpolateExpr) *value
 func (e *evalContext) evaluatePropertyAccess(x *expr, accessors []*propertyAccessor) *value {
 	// We make a copy of the resolved value here because evaluateExpr will merge it with its base, which mutates the
 	// value. We also stamp over the def with the provided expression in order to maintain proper error reporting.
-	v := newCopier().copy(e.evaluateExprAccess(x, accessors))
+	v := newValueCopier().Copy(e.evaluateExprAccess(x, accessors))
 	v.def = x
 	return v
 }

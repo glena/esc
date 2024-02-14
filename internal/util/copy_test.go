@@ -39,7 +39,7 @@ func TestCopy(t *testing.T) {
 		func(v *PseudoValue) any {
 			return v.Value
 		},
-		func(o *PseudoValue, v any) {
+		func(o *PseudoValue, _ *PseudoValue, v any) {
 			o.Value = v
 		},
 	).Copy(&a)

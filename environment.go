@@ -35,8 +35,8 @@ func newValueCopier() util.Copier[Value] {
 		func(v *Value) any {
 			return v.Value
 		},
-		func(o *Value, v any) {
-			o.Value = v
+		func(o *Value, _ *Value, nv any) {
+			o.Value = nv
 		},
 	)
 }
